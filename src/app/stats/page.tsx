@@ -271,7 +271,7 @@ export default function StatsPage() {
             {
               label: "Avg Saving Rate",
               value: `${avgSavingRate.toFixed(1)}%`,
-              sub: avgSavingRate >= savingTarget ? "🎉 Di atas target!" : `Target ${savingTarget}%`,
+              sub: avgSavingRate >= savingTarget ? "🎉 Di atas target!" : `Target lo ${savingTarget}%`,
               icon: <Target className="w-5 h-5" />,
               positive: avgSavingRate >= savingTarget,
               bg: avgSavingRate >= savingTarget ? "bg-emerald-50" : "bg-amber-50",
@@ -410,7 +410,7 @@ export default function StatsPage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={(v) => `${v.toFixed(0)}%`} tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={40} />
-                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}%`, "Saving Rate"]} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }} />
+                    <Tooltip formatter={(v) => [`${Number(v).toFixed(1)}%`, "Saving Rate"]} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }} />
                     <ReferenceLine y={savingTarget} stroke="#6366f1" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: `Target ${savingTarget}%`, position: "right", fontSize: 10, fill: "#6366f1" }} />
                     <Bar dataKey="savingRate" name="Saving Rate" radius={[6, 6, 0, 0]} maxBarSize={32}>
                       {monthlyData.map((entry, i) => (
@@ -443,7 +443,7 @@ export default function StatsPage() {
               <div className="card p-5 lg:p-6">
                 <div className="mb-6">
                   <h2 className="text-base font-bold text-slate-800">Pertumbuhan Portofolio 📊</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Modal vs nilai sekarang</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Modal vs nilai sekarang — return lo keliatan di sini</p>
                 </div>
                 {portfolioData.length === 0 ? (
                   <div className="py-16 text-center">
@@ -538,7 +538,7 @@ export default function StatsPage() {
                                   <Area type="monotone" dataKey="value" stroke="#6366f1" strokeWidth={2} fill={`url(#grad-${acc.id})`} dot={false} />
                                   <XAxis dataKey="label" hide />
                                   <YAxis hide />
-                                  <Tooltip formatter={(v: number) => fmtShort(v)} contentStyle={{ borderRadius: "10px", fontSize: "11px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }} />
+                                  <Tooltip formatter={(v) => fmtShort(Number(v))} contentStyle={{ borderRadius: "10px", fontSize: "11px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }} />
                                 </AreaChart>
                               </ResponsiveContainer>
                             </div>
@@ -583,7 +583,7 @@ export default function StatsPage() {
                         <Pie data={expCatData} cx="50%" cy="50%" innerRadius={65} outerRadius={100} dataKey="value" paddingAngle={3}>
                           {expCatData.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
                         </Pie>
-                        <Tooltip formatter={(v: number) => fmt(v)} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }} />
+                        <Tooltip formatter={(v) => fmt(Number(v))} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }} />
                       </PieChart>
                     </ResponsiveContainer>
 
@@ -623,7 +623,7 @@ export default function StatsPage() {
               <div className="card p-5 lg:p-6">
                 <div className="mb-6">
                   <h2 className="text-base font-bold text-slate-800">Tren Pengeluaran Bulanan</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Naik turunnya pengeluaran</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Naik turunnya pengeluaran lo</p>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
