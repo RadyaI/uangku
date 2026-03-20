@@ -397,7 +397,7 @@ export default function Dashboard() {
         <motion.div {...fade} className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight">
-              <span className="text-indigo-600">Duit</span>Radya
+              <span className="text-indigo-600">Duit</span>ku 💸
             </h1>
             <p className="text-slate-400 text-sm mt-0.5">{new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
           </div>
@@ -423,7 +423,7 @@ export default function Dashboard() {
         <motion.div {...fade} transition={{ delay: 0.05 }} className="card p-5 lg:p-6 mb-5 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(236,72,153,0.02) 100%)" }} />
           <div className="flex items-center justify-between mb-4">
-            <p className="text-slate-400 text-sm font-medium">Total Uang</p>
+            <p className="text-slate-400 text-sm font-medium">Total Kekayaan</p>
             <button onClick={() => setBalanceHidden((v) => !v)} className="text-slate-300 hover:text-slate-500 transition-colors">
               {balanceHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -482,13 +482,13 @@ export default function Dashboard() {
                         key={acc.id}
                         whileHover={{ scale: 1.01 }}
                         className="card card-hover p-4 cursor-pointer"
-                        onClick={() => setSelectedAccountDetail(selectedAccountDetail === acc.id ? null : acc.id)}
+                        onClick={() => router.push(`/accounts/${acc.id}`)}
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold" style={{ background: color }}>
                             {acc.name.charAt(0).toUpperCase()}
                           </div>
-                          <ChevronRight className={`w-4 h-4 text-slate-300 transition-transform ${selectedAccountDetail === acc.id ? "rotate-90" : ""}`} />
+                          <ChevronRight className="w-4 h-4 text-slate-300" />
                         </div>
                         <p className="text-xs text-slate-400 font-medium truncate">{acc.name}</p>
                         <p className="text-lg font-extrabold text-slate-800 mt-0.5 truncate">{balanceHidden ? "•••" : fmtShort(val)}</p>
@@ -677,7 +677,7 @@ export default function Dashboard() {
 
             {/* Expense Chart */}
             <motion.div {...fade} transition={{ delay: 0.17 }} className="card p-5">
-              <h2 className="text-base font-bold text-slate-700 mb-1">Keluarnya di Mana?</h2>
+              <h2 className="text-base font-bold text-slate-700 mb-1">Bocornya di Mana 🔍</h2>
               <p className="text-xs text-slate-400 mb-4">{monthNames[filterMonth]} {filterYear}</p>
               {pieData.length === 0 ? (
                 <div className="py-8 text-center">
@@ -1035,7 +1035,7 @@ export default function Dashboard() {
 
               {/* Add Account */}
               {modal === "addAccount" && (
-                <>f
+                <>
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-bold text-slate-800">Tambah Akun Baru</h3>
                     <button onClick={() => setModal("none")} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors"><X className="w-4 h-4" /></button>
