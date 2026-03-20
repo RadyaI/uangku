@@ -182,7 +182,7 @@ export async function getTransactionById(id: string): Promise<Transaction | null
   }
 }
 
-export async function createTransaction(data: CreateTransaction): Promise<string> {
+export async function createTransaction(data: CreateTransaction & { fee?: number }): Promise<string> {
   try {
     const batch = writeBatch(db);
 
@@ -190,6 +190,7 @@ export async function createTransaction(data: CreateTransaction): Promise<string
     const payload = Object.fromEntries(Object.entries({ ...data, createdAt: serverTimestamp() }).filter(([, v]) => v !== undefined));
     batch.set(txRef, payload);
 
+    const fee = data.fee ?? 0;
     const accountRef = doc(db, COLLECTIONS.accounts, data.accountId);
     const accountSnap = await getDoc(accountRef);
     if (accountSnap.exists()) {
@@ -197,7 +198,7 @@ export async function createTransaction(data: CreateTransaction): Promise<string
       let delta = 0;
       if (data.type === "income") delta = data.amount;
       else if (data.type === "expense") delta = -data.amount;
-      else if (data.type === "transfer") delta = -data.amount;
+      else if (data.type === "transfer") delta = -(data.amount + fee);
       batch.update(accountRef, { balance: account.balance + delta });
     } else {
       console.warn("[createTransaction] akun asal tidak ditemukan, accountId:", data.accountId);
@@ -222,7 +223,7 @@ export async function createTransaction(data: CreateTransaction): Promise<string
   }
 }
 
-export async function updateTransaction(id: string, data: Partial<Transaction>): Promise<void> {
+export async function updateTransaction(id: string, data: Partial<Transaction> & { fee?: number }): Promise<void> {
   try {
     const clean = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== undefined));
     await updateDoc(doc(db, COLLECTIONS.transactions, id), clean);
@@ -250,7 +251,7 @@ export async function deleteTransaction(id: string): Promise<void> {
       let delta = 0;
       if (tx.type === "income") delta = -tx.amount;
       else if (tx.type === "expense") delta = tx.amount;
-      else if (tx.type === "transfer") delta = tx.amount;
+      else if (tx.type === "transfer") delta = tx.amount + (tx.fee ?? 0);
       batch.update(accountRef, { balance: account.balance + delta });
     } else {
       console.warn("[deleteTransaction] akun tidak ditemukan, accountId:", tx.accountId);

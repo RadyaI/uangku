@@ -96,6 +96,7 @@ export default function Dashboard() {
     categoryId: string;
     accountId: string;
     toAccountId: string;
+    fee: string;
     note: string;
     date: string;
   }>({
@@ -104,6 +105,7 @@ export default function Dashboard() {
     categoryId: "",
     accountId: "",
     toAccountId: "",
+    fee: "",
     note: "",
     date: now.toISOString().split("T")[0],
   });
@@ -188,6 +190,7 @@ export default function Dashboard() {
         note: txForm.note,
         date: Timestamp.fromDate(new Date(txForm.date)),
         ...(txForm.type === "transfer" && txForm.toAccountId ? { toAccountId: txForm.toAccountId } : {}),
+        ...(txForm.type === "transfer" && txForm.fee ? { fee: parseFloat(txForm.fee.replace(/\D/g, "")) } : {}),
       };
 
       if (selectedTx) {
@@ -322,7 +325,7 @@ export default function Dashboard() {
   };
 
   const resetTxForm = () => {
-    setTxForm({ type: "expense", amount: "", categoryId: "", accountId: accounts[0]?.id ?? "", toAccountId: "", note: "", date: now.toISOString().split("T")[0] });
+    setTxForm({ type: "expense", amount: "", categoryId: "", accountId: accounts[0]?.id ?? "", toAccountId: "", fee: "", note: "", date: now.toISOString().split("T")[0] });
   };
 
   const openEditTx = (tx: Transaction) => {
@@ -333,6 +336,7 @@ export default function Dashboard() {
       categoryId: tx.categoryId ?? "",
       accountId: tx.accountId,
       toAccountId: tx.toAccountId ?? "",
+      fee: tx.fee ? String(tx.fee) : "",
       note: tx.note,
       date: tx.date.toDate().toISOString().split("T")[0],
     });
@@ -570,6 +574,15 @@ export default function Dashboard() {
                   onChange={(e) => setTxForm((p) => ({ ...p, date: e.target.value }))}
                   className="border border-slate-100 bg-slate-50 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium transition-all"
                 />
+                {txForm.type === "transfer" && (
+                  <input
+                    type="text"
+                    placeholder="Biaya transfer (Rp) — opsional"
+                    value={txForm.fee ? `Rp ${Number(txForm.fee.replace(/\D/g, "")).toLocaleString("id-ID")}` : ""}
+                    onChange={(e) => setTxForm((p) => ({ ...p, fee: e.target.value.replace(/\D/g, "") }))}
+                    className="border border-amber-100 bg-amber-50 rounded-xl px-3 py-2.5 text-sm text-amber-700 font-medium transition-all placeholder:text-amber-300"
+                  />
+                )}
                 <input
                   type="text"
                   placeholder="Catatan (opsional)"
@@ -664,7 +677,7 @@ export default function Dashboard() {
 
             {/* Expense Chart */}
             <motion.div {...fade} transition={{ delay: 0.17 }} className="card p-5">
-              <h2 className="text-base font-bold text-slate-700 mb-1">keluarnya di Mana?</h2>
+              <h2 className="text-base font-bold text-slate-700 mb-1">Keluarnya di Mana?</h2>
               <p className="text-xs text-slate-400 mb-4">{monthNames[filterMonth]} {filterYear}</p>
               {pieData.length === 0 ? (
                 <div className="py-8 text-center">
@@ -925,6 +938,23 @@ export default function Dashboard() {
                       </select>
                     )}
                     <input type="date" value={txForm.date} onChange={(e) => setTxForm((p) => ({ ...p, date: e.target.value }))} className="w-full border border-slate-100 bg-slate-50 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium transition-all" />
+                    {txForm.type === "transfer" && (
+                      <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
+                        <p className="text-xs font-bold text-amber-600 mb-2">💸 Biaya Transfer / Pajak</p>
+                        <input
+                          type="text"
+                          placeholder="Nominal biaya (Rp) — kosongkan jika gratis"
+                          value={txForm.fee ? `Rp ${Number(txForm.fee.replace(/\D/g, "")).toLocaleString("id-ID")}` : ""}
+                          onChange={(e) => setTxForm((p) => ({ ...p, fee: e.target.value.replace(/\D/g, "") }))}
+                          className="w-full bg-transparent text-sm font-bold text-amber-700 placeholder:text-amber-300 focus:outline-none"
+                        />
+                        {txForm.fee && txForm.amount && (
+                          <p className="text-xs text-amber-500 mt-1.5">
+                            Akun asal dikurangi: Rp {(Number(txForm.amount.replace(/\D/g, "")) + Number(txForm.fee.replace(/\D/g, ""))).toLocaleString("id-ID")} (nominal + biaya)
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <input type="text" placeholder="Catatan" value={txForm.note} onChange={(e) => setTxForm((p) => ({ ...p, note: e.target.value }))} className="w-full border border-slate-100 bg-slate-50 rounded-xl px-3 py-2.5 text-sm text-slate-700 font-medium transition-all" />
                   </div>
                   <button onClick={handleSaveTx} className="mt-4 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
@@ -1005,7 +1035,7 @@ export default function Dashboard() {
 
               {/* Add Account */}
               {modal === "addAccount" && (
-                <>
+                <>f
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-lg font-bold text-slate-800">Tambah Akun Baru</h3>
                     <button onClick={() => setModal("none")} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 transition-colors"><X className="w-4 h-4" /></button>

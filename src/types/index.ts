@@ -34,6 +34,7 @@ export interface Transaction {
   type: TransactionType;
   amount: number;
   note: string;
+  fee?: number;
   date: Timestamp;
   createdAt: Timestamp;
   // khusus transfer antar bank
@@ -80,18 +81,18 @@ export interface NetWorthSnapshot {
 
 // ─── Firestore Collection Paths ──────────────────────────────────────────────
 export const COLLECTIONS = {
-  accounts:           "accounts",
-  categories:         "categories",
-  transactions:       "transactions",
-  goals:              "goals",
+  accounts: "accounts",
+  categories: "categories",
+  transactions: "transactions",
+  goals: "goals",
   portfolioSnapshots: "portfolioSnapshots",
-  netWorthSnapshots:  "netWorthSnapshots",
+  netWorthSnapshots: "netWorthSnapshots",
 } as const;
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────
-export type CreateTransaction       = Omit<Transaction, "id" | "createdAt">;
-export type CreateGoal              = Omit<Goal, "id" | "createdAt">;
-export type CreateCategory          = Omit<Category, "id">;
-export type CreateAccount           = Omit<Account, "id" | "createdAt">;
+export type CreateTransaction = Omit<Transaction, "id" | "createdAt">;
+export type CreateGoal = Omit<Goal, "id" | "createdAt">;
+export type CreateCategory = Omit<Category, "id">;
+export type CreateAccount = Omit<Account, "id" | "createdAt">;
 export type CreatePortfolioSnapshot = Omit<PortfolioSnapshot, "id" | "createdAt">;
-export type CreateNetWorthSnapshot  = Omit<NetWorthSnapshot, "id" | "createdAt">;
+export type CreateNetWorthSnapshot = Omit<NetWorthSnapshot, "id" | "createdAt">;
