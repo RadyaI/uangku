@@ -1,0 +1,319 @@
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "@/utils/firebase";
+import {
+  Account,
+  Category,
+  Transaction,
+  Goal,
+  PortfolioSnapshot,
+  NetWorthSnapshot,
+  CreateAccount,
+  CreateCategory,
+  CreateTransaction,
+  CreateGoal,
+  CreatePortfolioSnapshot,
+  CreateNetWorthSnapshot,
+  COLLECTIONS,
+} from "@/types";
+
+// ─── Accounts ────────────────────────────────────────────────────────────────
+
+export async function getAccounts(): Promise<Account[]> {
+  const q = query(collection(db, COLLECTIONS.accounts), where("isActive", "==", true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Account));
+}
+
+export async function getAccountById(id: string): Promise<Account | null> {
+  const snap = await getDoc(doc(db, COLLECTIONS.accounts, id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Account;
+}
+
+export async function createAccount(data: CreateAccount): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTIONS.accounts), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateAccount(id: string, data: Partial<Account>): Promise<void> {
+  await updateDoc(doc(db, COLLECTIONS.accounts, id), data);
+}
+
+export async function deleteAccount(id: string): Promise<void> {
+  await updateDoc(doc(db, COLLECTIONS.accounts, id), { isActive: false });
+}
+
+export async function updateAccountBalance(id: string, amount: number): Promise<void> {
+  const account = await getAccountById(id);
+  if (!account) return;
+  await updateDoc(doc(db, COLLECTIONS.accounts, id), {
+    balance: account.balance + amount,
+  });
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────────
+
+export async function getCategories(): Promise<Category[]> {
+  const snap = await getDocs(collection(db, COLLECTIONS.categories));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Category));
+}
+
+export async function createCategory(data: CreateCategory): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTIONS.categories), data);
+  return ref.id;
+}
+
+export async function updateCategory(id: string, data: Partial<Category>): Promise<void> {
+  await updateDoc(doc(db, COLLECTIONS.categories, id), data);
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.categories, id));
+}
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+export async function getTransactions(options?: {
+  accountId?: string;
+  categoryId?: string;
+  type?: string;
+  month?: number;
+  year?: number;
+  limitCount?: number;
+}): Promise<Transaction[]> {
+  const constraints: Parameters<typeof query>[1][] = [orderBy("date", "desc")];
+
+  if (options?.accountId) {
+    constraints.push(where("accountId", "==", options.accountId));
+  }
+  if (options?.categoryId) {
+    constraints.push(where("categoryId", "==", options.categoryId));
+  }
+  if (options?.type) {
+    constraints.push(where("type", "==", options.type));
+  }
+  if (options?.month !== undefined && options?.year !== undefined) {
+    const start = new Date(options.year, options.month, 1);
+    const end = new Date(options.year, options.month + 1, 0, 23, 59, 59);
+    constraints.push(where("date", ">=", Timestamp.fromDate(start)));
+    constraints.push(where("date", "<=", Timestamp.fromDate(end)));
+  }
+  if (options?.limitCount) {
+    constraints.push(limit(options.limitCount));
+  }
+
+  const q = query(collection(db, COLLECTIONS.transactions), ...constraints);
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Transaction));
+}
+
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const snap = await getDoc(doc(db, COLLECTIONS.transactions, id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Transaction;
+}
+
+export async function createTransaction(data: CreateTransaction): Promise<string> {
+  const batch = writeBatch(db);
+
+  const txRef = doc(collection(db, COLLECTIONS.transactions));
+  batch.set(txRef, { ...data, createdAt: serverTimestamp() });
+
+  const accountRef = doc(db, COLLECTIONS.accounts, data.accountId);
+  const accountSnap = await getDoc(accountRef);
+  if (accountSnap.exists()) {
+    const account = accountSnap.data() as Account;
+    let delta = 0;
+    if (data.type === "income") delta = data.amount;
+    else if (data.type === "expense") delta = -data.amount;
+    else if (data.type === "transfer") delta = -data.amount;
+    batch.update(accountRef, { balance: account.balance + delta });
+  }
+
+  if (data.type === "transfer" && data.toAccountId) {
+    const toRef = doc(db, COLLECTIONS.accounts, data.toAccountId);
+    const toSnap = await getDoc(toRef);
+    if (toSnap.exists()) {
+      const toAccount = toSnap.data() as Account;
+      batch.update(toRef, { balance: toAccount.balance + data.amount });
+    }
+  }
+
+  await batch.commit();
+  return txRef.id;
+}
+
+export async function updateTransaction(id: string, data: Partial<Transaction>): Promise<void> {
+  await updateDoc(doc(db, COLLECTIONS.transactions, id), data);
+}
+
+export async function deleteTransaction(id: string): Promise<void> {
+  const tx = await getTransactionById(id);
+  if (!tx) return;
+
+  const batch = writeBatch(db);
+  batch.delete(doc(db, COLLECTIONS.transactions, id));
+
+  const accountRef = doc(db, COLLECTIONS.accounts, tx.accountId);
+  const accountSnap = await getDoc(accountRef);
+  if (accountSnap.exists()) {
+    const account = accountSnap.data() as Account;
+    let delta = 0;
+    if (tx.type === "income") delta = -tx.amount;
+    else if (tx.type === "expense") delta = tx.amount;
+    else if (tx.type === "transfer") delta = tx.amount;
+    batch.update(accountRef, { balance: account.balance + delta });
+  }
+
+  if (tx.type === "transfer" && tx.toAccountId) {
+    const toRef = doc(db, COLLECTIONS.accounts, tx.toAccountId);
+    const toSnap = await getDoc(toRef);
+    if (toSnap.exists()) {
+      const toAccount = toSnap.data() as Account;
+      batch.update(toRef, { balance: toAccount.balance - tx.amount });
+    }
+  }
+
+  await batch.commit();
+}
+
+export async function getMonthlyStats(month: number, year: number) {
+  const txs = await getTransactions({ month, year });
+  const income = txs.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+  const expense = txs.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  return { income, expense, balance: income - expense, transactions: txs };
+}
+
+export async function getExpenseByCategory(month: number, year: number) {
+  const txs = await getTransactions({ month, year });
+  const expenses = txs.filter((t) => t.type === "expense");
+  const map: Record<string, number> = {};
+  for (const tx of expenses) {
+    const key = tx.categoryId ?? "uncategorized";
+    map[key] = (map[key] ?? 0) + tx.amount;
+  }
+  return map;
+}
+
+// ─── Goals ───────────────────────────────────────────────────────────────────
+
+export async function getGoals(): Promise<Goal[]> {
+  const q = query(collection(db, COLLECTIONS.goals), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Goal));
+}
+
+export async function createGoal(data: CreateGoal): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTIONS.goals), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function updateGoal(id: string, data: Partial<Goal>): Promise<void> {
+  await updateDoc(doc(db, COLLECTIONS.goals, id), data);
+}
+
+export async function depositToGoal(id: string, amount: number): Promise<void> {
+  const snap = await getDoc(doc(db, COLLECTIONS.goals, id));
+  if (!snap.exists()) return;
+  const goal = snap.data() as Goal;
+  const newAmount = goal.currentAmount + amount;
+  await updateDoc(doc(db, COLLECTIONS.goals, id), {
+    currentAmount: newAmount,
+    isDone: newAmount >= goal.targetAmount,
+  });
+}
+
+export async function deleteGoal(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.goals, id));
+}
+
+// ─── Portfolio Snapshots ──────────────────────────────────────────────────────
+
+export async function getPortfolioSnapshots(accountId?: string): Promise<PortfolioSnapshot[]> {
+  const constraints: Parameters<typeof query>[1][] = [orderBy("snapshotDate", "desc")];
+  if (accountId) constraints.push(where("accountId", "==", accountId));
+  const q = query(collection(db, COLLECTIONS.portfolioSnapshots), ...constraints);
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PortfolioSnapshot));
+}
+
+export async function getLatestPortfolioSnapshot(accountId: string): Promise<PortfolioSnapshot | null> {
+  const q = query(
+    collection(db, COLLECTIONS.portfolioSnapshots),
+    where("accountId", "==", accountId),
+    orderBy("snapshotDate", "desc"),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() } as PortfolioSnapshot;
+}
+
+export async function createPortfolioSnapshot(data: CreatePortfolioSnapshot): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTIONS.portfolioSnapshots), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function deletePortfolioSnapshot(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.portfolioSnapshots, id));
+}
+
+// ─── Net Worth Snapshots ──────────────────────────────────────────────────────
+
+export async function getNetWorthSnapshots(): Promise<NetWorthSnapshot[]> {
+  const q = query(collection(db, COLLECTIONS.netWorthSnapshots), orderBy("snapshotDate", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as NetWorthSnapshot));
+}
+
+export async function createNetWorthSnapshot(data: CreateNetWorthSnapshot): Promise<string> {
+  const ref = await addDoc(collection(db, COLLECTIONS.netWorthSnapshots), {
+    ...data,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function deleteNetWorthSnapshot(id: string): Promise<void> {
+  await deleteDoc(doc(db, COLLECTIONS.netWorthSnapshots, id));
+}
+
+// ─── Budget Helpers ───────────────────────────────────────────────────────────
+
+export async function getBudgetUsage(
+  budgets: Record<string, number>,
+  month: number,
+  year: number
+): Promise<Record<string, { used: number; limit: number; percent: number }>> {
+  const byCategory = await getExpenseByCategory(month, year);
+  const result: Record<string, { used: number; limit: number; percent: number }> = {};
+  for (const [catId, limitAmount] of Object.entries(budgets)) {
+    const used = byCategory[catId] ?? 0;
+    result[catId] = { used, limit: limitAmount, percent: Math.min((used / limitAmount) * 100, 100) };
+  }
+  return result;
+}
