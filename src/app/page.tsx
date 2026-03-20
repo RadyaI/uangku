@@ -81,10 +81,6 @@ export default function Dashboard() {
   const [filterMonth, setFilterMonth] = useState(now.getMonth());
   const [filterYear, setFilterYear] = useState(now.getFullYear());
 
-  const [budgets, setBudgets] = useState<Record<string, number>>({});
-  const [editingBudget, setEditingBudget] = useState<string | null>(null);
-  const [budgetInput, setBudgetInput] = useState("");
-
   const [modal, setModal] = useState<Modal>("none");
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -397,7 +393,7 @@ export default function Dashboard() {
         <motion.div {...fade} className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight">
-              <span className="text-indigo-600">Duit</span>ku 💸
+              <span className="text-indigo-600">Duit</span>ku
             </h1>
             <p className="text-slate-400 text-sm mt-0.5">{new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
           </div>
@@ -423,7 +419,7 @@ export default function Dashboard() {
         <motion.div {...fade} transition={{ delay: 0.05 }} className="card p-5 lg:p-6 mb-5 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(236,72,153,0.02) 100%)" }} />
           <div className="flex items-center justify-between mb-4">
-            <p className="text-slate-400 text-sm font-medium">Total Kekayaan</p>
+            <p className="text-slate-400 text-sm font-medium">Total Uang</p>
             <button onClick={() => setBalanceHidden((v) => !v)} className="text-slate-300 hover:text-slate-500 transition-colors">
               {balanceHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -677,7 +673,7 @@ export default function Dashboard() {
 
             {/* Expense Chart */}
             <motion.div {...fade} transition={{ delay: 0.17 }} className="card p-5">
-              <h2 className="text-base font-bold text-slate-700 mb-1">Bocornya di Mana 🔍</h2>
+              <h2 className="text-base font-bold text-slate-700 mb-1">Keluarnya di Mana?</h2>
               <p className="text-xs text-slate-400 mb-4">{monthNames[filterMonth]} {filterYear}</p>
               {pieData.length === 0 ? (
                 <div className="py-8 text-center">
@@ -754,63 +750,6 @@ export default function Dashboard() {
               )}
             </motion.div>
 
-            {/* Budget */}
-            <motion.div {...fade} transition={{ delay: 0.21 }} className="card p-5">
-              <h2 className="text-base font-bold text-slate-700 mb-4">Budget 🎯</h2>
-              {categories.filter((c) => c.type === "expense").slice(0, 6).map((cat) => {
-                const limit = budgets[cat.id] ?? 0;
-                const used = expenseByCategory[cat.id] ?? 0;
-                const pct = limit > 0 ? Math.min((used / limit) * 100, 100) : 0;
-                const isEditing = editingBudget === cat.id;
-                return (
-                  <div key={cat.id} className="mb-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-slate-600">{cat.icon} {cat.name}</span>
-                      {isEditing ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            autoFocus
-                            type="text"
-                            value={budgetInput}
-                            onChange={(e) => setBudgetInput(e.target.value.replace(/\D/g, ""))}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                setBudgets((p) => ({ ...p, [cat.id]: Number(budgetInput) }));
-                                setEditingBudget(null);
-                              }
-                              if (e.key === "Escape") setEditingBudget(null);
-                            }}
-                            className="w-24 text-xs border border-indigo-200 rounded-lg px-2 py-1 text-right font-bold"
-                            placeholder="Limit"
-                          />
-                          <button onClick={() => { setBudgets((p) => ({ ...p, [cat.id]: Number(budgetInput) })); setEditingBudget(null); }} className="text-emerald-500">
-                            <Check className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setEditingBudget(cat.id); setBudgetInput(String(limit)); }}
-                          className="text-xs text-slate-400 hover:text-indigo-500 font-medium flex items-center gap-1"
-                        >
-                          {limit > 0 ? <span className={pct >= 80 ? "text-rose-500 font-bold" : "text-slate-500"}>{fmtShort(used)}/{fmtShort(limit)}</span> : <span className="text-slate-300">+ Set</span>}
-                        </button>
-                      )}
-                    </div>
-                    {limit > 0 && (
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.6, ease: "easeOut" }}
-                          className="h-full rounded-full transition-all"
-                          style={{ background: pct >= 90 ? "#f43f5e" : pct >= 70 ? "#f59e0b" : "#6366f1" }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </motion.div>
 
             {/* Goals */}
             <motion.div {...fade} transition={{ delay: 0.23 }} className="card p-5">
