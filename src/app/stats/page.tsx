@@ -19,10 +19,9 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
 const fmtShort = (n: number) => {
-  if (Math.abs(n) >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}jt`;
-  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}rb`;
-  return String(n);
+  if (Math.abs(n) >= 100_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 100_000_000) return `${(n / 1_000_000).toFixed(1)}jt`;
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 };
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
@@ -233,7 +232,7 @@ export default function StatsPage() {
               <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight">
                 Statistik <span className="text-indigo-600">Keuangan</span>
               </h1>
-              <p className="text-slate-400 text-sm mt-0.5">Lihat pola & progres lo dari waktu ke waktu</p>
+              <p className="text-slate-400 text-sm mt-0.5">Lihat pola & progres dari waktu ke waktu</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -271,7 +270,7 @@ export default function StatsPage() {
             {
               label: "Avg Saving Rate",
               value: `${avgSavingRate.toFixed(1)}%`,
-              sub: avgSavingRate >= savingTarget ? "🎉 Di atas target!" : `Target lo ${savingTarget}%`,
+              sub: avgSavingRate >= savingTarget ? "🎉 Di atas target!" : `Target ${savingTarget}%`,
               icon: <Target className="w-5 h-5" />,
               positive: avgSavingRate >= savingTarget,
               bg: avgSavingRate >= savingTarget ? "bg-emerald-50" : "bg-amber-50",
@@ -443,7 +442,7 @@ export default function StatsPage() {
               <div className="card p-5 lg:p-6">
                 <div className="mb-6">
                   <h2 className="text-base font-bold text-slate-800">Pertumbuhan Portofolio 📊</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Modal vs nilai sekarang — return lo keliatan di sini</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Modal vs nilai sekarang</p>
                 </div>
                 {portfolioData.length === 0 ? (
                   <div className="py-16 text-center">
@@ -623,7 +622,7 @@ export default function StatsPage() {
               <div className="card p-5 lg:p-6">
                 <div className="mb-6">
                   <h2 className="text-base font-bold text-slate-800">Tren Pengeluaran Bulanan</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Naik turunnya pengeluaran lo</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Naik turunnya pengeluaran</p>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={monthlyData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>

@@ -32,10 +32,9 @@ const fmt = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 
 const fmtShort = (n: number) => {
-  if (Math.abs(n) >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}jt`;
-  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(0)}rb`;
-  return String(n);
+  if (Math.abs(n) >= 100_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}M`;
+  if (Math.abs(n) >= 100_000_000) return `${(n / 1_000_000).toFixed(1)}jt`;
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(n);
 };
 
 const PALETTE = ["#6366f1", "#f43f5e", "#10b981", "#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6"];
@@ -188,7 +187,7 @@ export default function Dashboard() {
         categoryId: txForm.type !== "transfer" ? (txForm.categoryId || null) : null,
         note: txForm.note,
         date: Timestamp.fromDate(new Date(txForm.date)),
-        toAccountId: txForm.type === "transfer" ? txForm.toAccountId : undefined,
+        ...(txForm.type === "transfer" && txForm.toAccountId ? { toAccountId: txForm.toAccountId } : {}),
       };
 
       if (selectedTx) {
@@ -394,7 +393,7 @@ export default function Dashboard() {
         <motion.div {...fade} className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight">
-              <span className="text-indigo-600">Duit</span>ku 💸
+              <span className="text-indigo-600">Duit</span>Radya
             </h1>
             <p className="text-slate-400 text-sm mt-0.5">{new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
           </div>
@@ -420,7 +419,7 @@ export default function Dashboard() {
         <motion.div {...fade} transition={{ delay: 0.05 }} className="card p-5 lg:p-6 mb-5 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.04) 0%, rgba(236,72,153,0.02) 100%)" }} />
           <div className="flex items-center justify-between mb-4">
-            <p className="text-slate-400 text-sm font-medium">Total Kekayaan</p>
+            <p className="text-slate-400 text-sm font-medium">Total Uang</p>
             <button onClick={() => setBalanceHidden((v) => !v)} className="text-slate-300 hover:text-slate-500 transition-colors">
               {balanceHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -665,7 +664,7 @@ export default function Dashboard() {
 
             {/* Expense Chart */}
             <motion.div {...fade} transition={{ delay: 0.17 }} className="card p-5">
-              <h2 className="text-base font-bold text-slate-700 mb-1">Bocornya di Mana 🔍</h2>
+              <h2 className="text-base font-bold text-slate-700 mb-1">keluarnya di Mana?</h2>
               <p className="text-xs text-slate-400 mb-4">{monthNames[filterMonth]} {filterYear}</p>
               {pieData.length === 0 ? (
                 <div className="py-8 text-center">
