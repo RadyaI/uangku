@@ -41,14 +41,16 @@ const PALETTE = ["#6366f1", "#f43f5e", "#10b981", "#f59e0b", "#3b82f6", "#8b5cf6
 
 const DEFAULT_CATEGORIES: { name: string; icon: string; type: "income" | "expense" }[] = [
   { name: "Gaji", icon: "💼", type: "income" },
+  { name: "Uang Saku", icon: "🙆‍♂️", type: "income" },
   { name: "Freelance", icon: "💻", type: "income" },
   { name: "Investasi", icon: "📈", type: "income" },
   { name: "Lainnya (in)", icon: "💰", type: "income" },
+
   { name: "Makan", icon: "🍜", type: "expense" },
   { name: "Transport", icon: "🚗", type: "expense" },
   { name: "Belanja", icon: "🛍️", type: "expense" },
   { name: "Hiburan", icon: "🎮", type: "expense" },
-  { name: "Kesehatan", icon: "💊", type: "expense" },
+  { name: "Internet", icon: "💊", type: "expense" },
   { name: "Pendidikan", icon: "📚", type: "expense" },
   { name: "Tagihan", icon: "🧾", type: "expense" },
   { name: "Lainnya (out)", icon: "📦", type: "expense" },
